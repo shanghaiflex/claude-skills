@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import zipfile
 
 PORT = int(os.environ.get("NL_PORT", "9222"))
@@ -206,7 +207,6 @@ def cmd_ocr(args):
     if args.pages:
         part = args.pages.split("-")
         first, last = int(part[0]), int(part[-1])
-    tmp = "/tmp/nalog_ocr.png"
     for n in range(first - 1, min(last, len(reader.pages))):
         page = reader.pages[n]
         text = (page.extract_text() or "").strip()
@@ -218,10 +218,12 @@ def cmd_ocr(args):
         if not images:
             print(f"--- стр.{n+1}: ни текста, ни изображений")
             continue
+        # $TMPDIR, а не /tmp: в песочнице Claude Code tesseract не видит /tmp
+        tmp = os.path.join(tempfile.gettempdir(), "nalog_ocr" + os.path.splitext(images[0].name)[1])
         with open(tmp, "wb") as fh:
             fh.write(images[0].data)
         res = subprocess.run(["tesseract", tmp, "stdout", "-l", "rus", "--psm", "6"],
-                             capture_output=True, text=True)
+                             capture_output=True, text=True, errors="replace")
         print(f"--- стр.{n+1} (OCR) ---")
         print(" ".join(res.stdout.split())[:1500])
 
