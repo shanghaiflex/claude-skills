@@ -1,0 +1,10 @@
+# В репозитории только публикуемые скиллы; остальное в ~/.claude/skills — локальное
+/*
+!/.gitignore
+!/README.md
+!/avito/
+!/nalog/
+
+__pycache__/
+*.pyc
+.DS_Store
